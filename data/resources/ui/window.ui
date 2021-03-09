@@ -122,7 +122,11 @@
             <child>
               <object class="GtkLabel" id="label">
                 <property name="can-focus">False</property>
-                <property name="label" translatable="yes">Hello world!</property>
+                <binding name="label">
+                  <lookup name="label" type="GtkLabel">
+                    <lookup name="selected-item">selection</lookup>
+                  </lookup>
+                </binding>
                 <style>
                   <class name="title-header"/>
                 </style>
