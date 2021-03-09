@@ -1,0 +1,19 @@
+[package]
+name = "passport"
+version = "0.1.0"
+authors = ["Matthias Vogelgesang <matthias.vogelgesang@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+anyhow = "1"
+dirs = "3"
+log = "0.4"
+pretty_env_logger = "0.4"
+gettext-rs = { version = "0.5", features = ["gettext-system"] }
+gtk-macros = "0.2"
+once_cell = "1.5"
+walkdir = "2"
+
+[dependencies.gtk]
+package = "gtk4"
+git = "https://github.com/gtk-rs/gtk4-rs"
