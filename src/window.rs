@@ -8,6 +8,7 @@ use gtk::{self, prelude::*};
 use gtk::{gio, glib, CompositeTemplate};
 use gtk_macros::action;
 use log::warn;
+use std::rc::Rc;
 
 mod imp {
     use super::*;
@@ -15,7 +16,7 @@ mod imp {
     #[derive(CompositeTemplate)]
     #[template(resource = "/net/bloerg/Passport/window.ui")]
     pub struct ApplicationWindow {
-        pub storage: storage::Storage,
+        pub storage: Rc<storage::Storage>,
         pub settings: gio::Settings,
         #[template_child]
         pub search_bar: TemplateChild<gtk::SearchBar>,
@@ -25,6 +26,8 @@ mod imp {
         pub store: TemplateChild<gio::ListStore>,
         #[template_child]
         pub selection: TemplateChild<gtk::SingleSelection>,
+        #[template_child]
+        pub password: TemplateChild<gtk::PasswordEntry>,
     }
 
     #[glib::object_subclass]
@@ -35,12 +38,13 @@ mod imp {
 
         fn new() -> Self {
             Self {
-                storage: storage::Storage::new().unwrap(),
+                storage: Rc::new(storage::Storage::new().unwrap()),
                 settings: gio::Settings::new(APP_ID),
                 search_bar: TemplateChild::default(),
                 search_entry: TemplateChild::default(),
                 store: TemplateChild::default(),
                 selection: TemplateChild::default(),
+                password: TemplateChild::default(),
             }
         }
 
@@ -77,6 +81,17 @@ mod imp {
                 label.set_halign(gtk::Align::Start);
                 self.store.append(&label);
             }
+
+            self.selection.connect_selection_changed(
+                clone!(@strong self.storage as storage, @strong self.password as password => move |selection, _, _| {
+                    if let Some(item) = selection.get_object(selection.get_selected()) {
+                        let label = item.downcast::<gtk::Label>().unwrap();
+                        // make this async
+                        let entry = storage.decrypt(label.get_text().as_str()).unwrap();
+                        password.set_text(&entry.password);
+                    }
+                }),
+            );
         }
     }
 
@@ -101,8 +116,7 @@ glib::wrapper! {
 
 impl ApplicationWindow {
     pub fn new(app: &Application) -> Self {
-        let window: Self =
-            glib::Object::new(&[]).expect("Failed to create ApplicationWindow");
+        let window: Self = glib::Object::new(&[]).expect("Failed to create ApplicationWindow");
         window.set_application(Some(app));
 
         // Set icons for shell
