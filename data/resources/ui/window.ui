@@ -122,25 +122,43 @@
             <child>
               <object class="GtkBox">
                 <property name="orientation">GTK_ORIENTATION_VERTICAL</property>
-                <property name="halign">GTK_ALIGN_CENTER</property>
-                <property name="valign">GTK_ALIGN_CENTER</property>
-                <property name="spacing">16</property>
                 <child>
-                  <object class="GtkLabel" id="label">
-                    <property name="can-focus">False</property>
-                    <binding name="label">
-                      <lookup name="label" type="GtkLabel">
-                        <lookup name="selected-item">selection</lookup>
-                      </lookup>
-                    </binding>
-                    <style>
-                      <class name="title-header"/>
-                    </style>
+                  <object class="GtkInfoBar" id="info_bar">
+                    <property name="revealed">False</property>
+                    <child>
+                      <object class="GtkLabel" id="info_label">
+                        <property name="margin-start">3</property>
+                        <property name="margin-bottom">3</property>
+                        <property name="margin-top">3</property>
+                      </object>
+                    </child>
                   </object>
                 </child>
                 <child>
-                  <object class="GtkPasswordEntry" id="password">
-                    <property name="show-peek-icon">True</property>
+                  <object class="GtkBox">
+                    <property name="orientation">GTK_ORIENTATION_VERTICAL</property>
+                    <property name="halign">GTK_ALIGN_CENTER</property>
+                    <property name="valign">GTK_ALIGN_CENTER</property>
+                    <property name="vexpand">True</property>
+                    <property name="spacing">16</property>
+                    <child>
+                      <object class="GtkLabel" id="entry_label">
+                        <property name="can-focus">False</property>
+                        <binding name="label">
+                          <lookup name="label" type="GtkLabel">
+                            <lookup name="selected-item">selection</lookup>
+                          </lookup>
+                        </binding>
+                        <style>
+                          <class name="title-header"/>
+                        </style>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkPasswordEntry" id="password">
+                        <property name="show-peek-icon">True</property>
+                      </object>
+                    </child>
                   </object>
                 </child>
               </object>

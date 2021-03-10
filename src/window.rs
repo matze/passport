@@ -10,12 +10,13 @@ use gtk_macros::action;
 use log::warn;
 use std::thread;
 
+pub enum Message {
+    UpdatePasswordEntry(String),
+    HideInfoBar,
+}
+
 mod imp {
     use super::*;
-
-    pub enum Message {
-        UpdatePasswordEntry(String),
-    }
 
     #[derive(CompositeTemplate)]
     #[template(resource = "/net/bloerg/Passport/window.ui")]
@@ -31,6 +32,12 @@ mod imp {
         pub selection: TemplateChild<gtk::SingleSelection>,
         #[template_child]
         pub password: TemplateChild<gtk::PasswordEntry>,
+        #[template_child]
+        pub info_bar: TemplateChild<gtk::InfoBar>,
+        #[template_child]
+        pub info_label: TemplateChild<gtk::Label>,
+        #[template_child]
+        pub entry_label: TemplateChild<gtk::Label>,
     }
 
     #[glib::object_subclass]
@@ -47,6 +54,9 @@ mod imp {
                 store: TemplateChild::default(),
                 selection: TemplateChild::default(),
                 password: TemplateChild::default(),
+                info_bar: TemplateChild::default(),
+                info_label: TemplateChild::default(),
+                entry_label: TemplateChild::default(),
             }
         }
 
@@ -85,36 +95,6 @@ mod imp {
                 label.set_halign(gtk::Align::Start);
                 self.store.append(&label);
             }
-
-            let (sender, receiver) = glib::MainContext::channel(glib::PRIORITY_DEFAULT);
-            let password = self.password.clone();
-
-            receiver.attach(None, move |message| {
-                match message {
-                    Message::UpdatePasswordEntry(text) => {
-                        password.set_text(&text);
-                    }
-                }
-
-                glib::Continue(true)
-            });
-
-            self.selection.connect_selection_changed(
-                clone!(@strong sender => move |selection, _, _| {
-                    if let Some(item) = selection.get_object(selection.get_selected()) {
-                        let label = item.downcast::<gtk::Label>().unwrap();
-                        let entry = label.get_text().clone();
-                        let sender = sender.clone();
-
-                        thread::spawn(move || {
-                            let _ = sender.send(Message::UpdatePasswordEntry(String::from("")));
-                            let storage = storage::Storage::new().unwrap();
-                            let entry = storage.decrypt(&entry).unwrap();
-                            let _ = sender.send(Message::UpdatePasswordEntry(entry.password));
-                        });
-                    }
-                }),
-            );
         }
     }
 
@@ -145,6 +125,45 @@ impl ApplicationWindow {
         // Set icons for shell
         gtk::Window::set_default_icon_name(APP_ID);
 
+        let (sender, receiver) = glib::MainContext::channel(glib::PRIORITY_DEFAULT);
+
+        // Handle background requests
+        receiver.attach(None,
+            clone!(@weak window as win => move |message| {
+                match message {
+                    Message::UpdatePasswordEntry(text) => {
+                        let password = &imp::ApplicationWindow::from_instance(&win).password;
+                        password.set_text(&text);
+                    },
+                    Message::HideInfoBar => {
+                        let info_bar = &imp::ApplicationWindow::from_instance(&win).info_bar;
+                        info_bar.set_revealed(false);
+                    },
+                }
+
+                glib::Continue(true)
+            })
+        );
+
+        let selection = &imp::ApplicationWindow::from_instance(&window).selection.clone();
+
+        selection.connect_selection_changed(
+            clone!(@strong sender => move |selection, _, _| {
+                if let Some(item) = selection.get_object(selection.get_selected()) {
+                    let label = item.downcast::<gtk::Label>().unwrap();
+                    let entry = label.get_text().clone();
+                    let sender = sender.clone();
+
+                    thread::spawn(move || {
+                        let _ = sender.send(Message::UpdatePasswordEntry(String::from("")));
+                        let storage = storage::Storage::new().unwrap();
+                        let entry = storage.decrypt(&entry).unwrap();
+                        let _ = sender.send(Message::UpdatePasswordEntry(entry.password));
+                    });
+                }
+            }),
+        );
+
         action!(
             window,
             "show-search",
@@ -165,6 +184,20 @@ impl ApplicationWindow {
                 let password = &imp::ApplicationWindow::from_instance(&win).password;
                 let clipboard = password.get_clipboard();
                 clipboard.set_text(&password.get_text());
+
+                let info_label = &imp::ApplicationWindow::from_instance(&win).info_label;
+                let entry_label = &imp::ApplicationWindow::from_instance(&win).entry_label;
+                info_label.set_markup(&format!("Copied <b>{}</b> to clipboard.", entry_label.get_text()));
+
+                let info_bar = &imp::ApplicationWindow::from_instance(&win).info_bar;
+                info_bar.set_revealed(true);
+
+                let sender = sender.clone();
+
+                glib::source::timeout_add_seconds(2, move || {
+                    let _ = sender.send(Message::HideInfoBar);
+                    glib::Continue(false)
+                });
             })
         );
 
