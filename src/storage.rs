@@ -1,10 +1,9 @@
 use anyhow::{anyhow, Context, Result};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::process::Command;
 
 pub struct Storage {
-    pub root: PathBuf,
-    pub entries: Vec<PathBuf>,
+    root: PathBuf,
 }
 
 pub struct Entry {
@@ -15,8 +14,12 @@ pub struct Entry {
 impl Storage {
     pub fn new() -> Result<Self> {
         let home = dirs::home_dir().ok_or(anyhow!("Cannot retrieve home dir"))?;
-        let root = home.join(".password-store");
+        Ok(Self {
+            root: home.join(".password-store"),
+        })
+    }
 
+    pub fn entries(&self) -> Vec<String> {
         fn is_gpg(entry: &walkdir::DirEntry) -> bool {
             entry
                 .file_name()
@@ -25,22 +28,20 @@ impl Storage {
                 .unwrap_or(false)
         }
 
-        let entries = walkdir::WalkDir::new(&root)
+        walkdir::WalkDir::new(&self.root)
             .into_iter()
             .filter_map(Result::ok)
             .filter(|entry| is_gpg(entry))
-            .map(|entry| entry.into_path())
-            .collect();
-
-        Ok(Self { root, entries })
-    }
-
-    pub fn entry_name(&self, entry: &Path) -> Result<String> {
-        Ok(entry
-            .strip_prefix(&self.root)?
-            .with_extension("")
-            .to_string_lossy()
-            .to_string())
+            .map(|entry| {
+                entry
+                    .into_path()
+                    .strip_prefix(&self.root)
+                    .unwrap()
+                    .with_extension("")
+                    .to_string_lossy()
+                    .to_string()
+            })
+            .collect()
     }
 
     pub fn decrypt(&self, entry: &str) -> Result<Entry> {

@@ -8,15 +8,18 @@ use gtk::{self, prelude::*};
 use gtk::{gio, glib, CompositeTemplate};
 use gtk_macros::action;
 use log::warn;
-use std::rc::Rc;
+use std::thread;
 
 mod imp {
     use super::*;
 
+    pub enum Message {
+        UpdatePasswordEntry(String),
+    }
+
     #[derive(CompositeTemplate)]
     #[template(resource = "/net/bloerg/Passport/window.ui")]
     pub struct ApplicationWindow {
-        pub storage: Rc<storage::Storage>,
         pub settings: gio::Settings,
         #[template_child]
         pub search_bar: TemplateChild<gtk::SearchBar>,
@@ -38,7 +41,6 @@ mod imp {
 
         fn new() -> Self {
             Self {
-                storage: Rc::new(storage::Storage::new().unwrap()),
                 settings: gio::Settings::new(APP_ID),
                 search_bar: TemplateChild::default(),
                 search_entry: TemplateChild::default(),
@@ -74,21 +76,42 @@ mod imp {
             // load latest window state
             obj.load_window_size();
 
-            for entry in &self.storage.entries {
+            let storage = storage::Storage::new().unwrap();
+
+            for entry in storage.entries() {
                 // We re-use GtkLabel which is lame but I am too stupid to define my own simple
                 // GObject subclass.
-                let label = gtk::Label::new(Some(&self.storage.entry_name(&entry).unwrap()));
+                let label = gtk::Label::new(Some(&entry));
                 label.set_halign(gtk::Align::Start);
                 self.store.append(&label);
             }
 
+            let (sender, receiver) = glib::MainContext::channel(glib::PRIORITY_DEFAULT);
+            let password = self.password.clone();
+
+            receiver.attach(None, move |message| {
+                match message {
+                    Message::UpdatePasswordEntry(text) => {
+                        password.set_text(&text);
+                    }
+                }
+
+                glib::Continue(true)
+            });
+
             self.selection.connect_selection_changed(
-                clone!(@strong self.storage as storage, @strong self.password as password => move |selection, _, _| {
+                clone!(@strong sender => move |selection, _, _| {
                     if let Some(item) = selection.get_object(selection.get_selected()) {
                         let label = item.downcast::<gtk::Label>().unwrap();
-                        // make this async
-                        let entry = storage.decrypt(label.get_text().as_str()).unwrap();
-                        password.set_text(&entry.password);
+                        let entry = label.get_text().clone();
+                        let sender = sender.clone();
+
+                        thread::spawn(move || {
+                            let _ = sender.send(Message::UpdatePasswordEntry(String::from("")));
+                            let storage = storage::Storage::new().unwrap();
+                            let entry = storage.decrypt(&entry).unwrap();
+                            let _ = sender.send(Message::UpdatePasswordEntry(entry.password));
+                        });
                     }
                 }),
             );
@@ -139,15 +162,9 @@ impl ApplicationWindow {
             window,
             "copy",
             clone!(@weak window as win => move |_, _| {
-                let selection = &imp::ApplicationWindow::from_instance(&win).selection;
-
-                if let Some(item) = selection.get_object(selection.get_selected()) {
-                    let storage = &imp::ApplicationWindow::from_instance(&win).storage;
-                    let label = item.downcast::<gtk::Label>().unwrap();
-                    let entry = storage.decrypt(label.get_text().as_str()).unwrap();
-                    let clipboard = label.get_clipboard();
-                    clipboard.set_text(&entry.password);
-                }
+                let password = &imp::ApplicationWindow::from_instance(&win).password;
+                let clipboard = password.get_clipboard();
+                clipboard.set_text(&password.get_text());
             })
         );
 
