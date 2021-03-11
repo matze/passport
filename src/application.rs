@@ -113,6 +113,7 @@ impl Application {
     fn setup_accels(&self) {
         self.set_accels_for_action("app.quit", &["<primary>q"]);
         self.set_accels_for_action("win.show-help-overlay", &["<primary>question"]);
+        self.set_accels_for_action("win.add", &["<primary>n"]);
         self.set_accels_for_action("win.show-search", &["<primary>f"]);
         self.set_accels_for_action("win.copy", &["<primary>c"]);
     }

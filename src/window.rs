@@ -166,6 +166,23 @@ impl ApplicationWindow {
 
         action!(
             window,
+            "add",
+            clone!(@weak window as win => move |_, _| {
+                let builder = gtk::Builder::from_resource("/net/bloerg/Passport/dialogs.ui");
+                let dialog: gtk::Dialog = builder.get_object("add_password_dialog").unwrap();
+                dialog.set_modal(true);
+                dialog.set_transient_for(Some(&win));
+
+                dialog.connect_response(move |dialog, response| {
+                    dialog.destroy();
+                });
+
+                dialog.show();
+            })
+        );
+
+        action!(
+            window,
             "show-search",
             clone!(@weak window as win => move |_, _| {
                 let search_bar = &imp::ApplicationWindow::from_instance(&win).search_bar;

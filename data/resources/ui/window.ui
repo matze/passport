@@ -20,6 +20,12 @@
     <property name="default-height">400</property>
     <child type="titlebar">
       <object class="GtkHeaderBar" id="headerbar">
+        <child type="start">
+          <object class="GtkButton" id="add_button">
+            <property name="icon-name">list-add-symbolic</property>
+            <property name="action-name">win.add</property>
+          </object>
+        </child>
         <child type="end">
           <object class="GtkMenuButton" id="appmenu_button">
             <property name="icon-name">open-menu-symbolic</property>
