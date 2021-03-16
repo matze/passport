@@ -2,3 +2,11 @@
   font-size: 36px;
   font-weight: bold;
 }
+
+/* Matches GTK4 Adwaita theme, no idea what happens for custom themes */
+.metadata {
+  padding: 8px;
+  border: 1px solid #cdc7c2;
+  border-radius: 5px;
+  border-spacing: 6px;
+}

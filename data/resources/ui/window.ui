@@ -174,7 +174,11 @@
                             <child>
                               <object class="GtkRevealer" id="metadata_revealer">
                                 <child>
-                                  <object class="GtkTextView" id="metadata"></object>
+                                  <object class="GtkTextView" id="metadata">
+                                    <style>
+                                      <class name="metadata"/>
+                                    </style>
+                                  </object>
                                 </child>
                               </object>
                             </child>
