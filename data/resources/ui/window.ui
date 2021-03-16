@@ -35,140 +35,176 @@
       </object>
     </child>
     <child>
-      <!-- main box -->
-      <object class="GtkBox">
-        <property name="orientation">GTK_ORIENTATION_VERTICAL</property>
+      <object class="GtkStack" id="stack">
+        <property name="transition-type">GTK_STACK_TRANSITION_TYPE_SLIDE_UP</property>
         <child>
-          <object class="GtkPaned">
-            <!-- left pane -->
-            <child>
+          <object class="GtkStackPage">
+            <property name="name">main_page</property>
+            <property name="child">
+              <!-- main box -->
               <object class="GtkBox">
                 <property name="orientation">GTK_ORIENTATION_VERTICAL</property>
                 <child>
-                  <object class="GtkSearchBar" id="search_bar">
-                    <property name="search-mode-enabled">False</property>
+                  <object class="GtkPaned">
+                    <!-- left pane -->
                     <child>
                       <object class="GtkBox">
+                        <property name="orientation">GTK_ORIENTATION_VERTICAL</property>
                         <child>
-                          <object class="GtkSearchEntry" id="search_entry">
-                            <property name="hexpand">True</property>
+                          <object class="GtkSearchBar" id="search_bar">
+                            <property name="search-mode-enabled">False</property>
+                            <child>
+                              <object class="GtkBox">
+                                <child>
+                                  <object class="GtkSearchEntry" id="search_entry">
+                                    <property name="hexpand">True</property>
+                                  </object>
+                                </child>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkScrolledWindow">
+                            <property name="vexpand">True</property>
+                            <property name="width-request">240</property>
+                            <child>
+                              <object class="GtkListView" id="entry_list">
+                                <property name="name">entry-list</property>
+                                <!-- List model -->
+                                <property name="model">
+                                  <object class="GtkSingleSelection" id="selection">
+                                    <property name="model">
+                                      <object class="GtkFilterListModel">
+                                        <property name="model">
+                                          <object class="GListStore" id="store"></object>
+                                        </property>
+                                        <property name="filter">
+                                          <object class="GtkStringFilter">
+                                            <property name="expression">
+                                              <lookup name="label" type="GtkLabel"></lookup>
+                                            </property>
+                                            <property name="search" bind-source="search_entry" bind-property="text"/>
+                                          </object>
+                                        </property>
+                                      </object>
+                                    </property>
+                                  </object>
+                                </property>
+                                <!-- List item factory -->
+                                <property name="factory">
+                                  <object class="GtkBuilderListItemFactory">
+                                    <property name="bytes"><![CDATA[
+                                    <?xml version="1.0" encoding="UTF-8"?>
+                                    <interface>
+                                      <template class="GtkListItem">
+                                        <property name="child">
+                                          <object class="GtkTreeExpander" id="expander">
+                                            <binding name="list-row">
+                                              <lookup name="item">GtkListItem</lookup>
+                                            </binding>
+                                            <property name="child">
+                                              <object class="GtkLabel">
+                                                <property name="xalign">0</property>
+                                                <property name="margin-start">9</property>
+                                                <property name="margin-end">9</property>
+                                                <property name="margin-bottom">9</property>
+                                                <property name="margin-top">9</property>
+                                                <binding name="label">
+                                                  <lookup name="label" type="GtkLabel">
+                                                    <lookup name="item">GtkListItem</lookup>
+                                                  </lookup>
+                                                </binding>
+                                              </object>
+                                            </property>
+                                          </object>
+                                        </property>
+                                      </template>
+                                    </interface>]]>
+                                    </property>
+                                  </object>
+                                </property>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <!-- right pane -->
+                    <child>
+                      <object class="GtkBox">
+                        <property name="orientation">GTK_ORIENTATION_VERTICAL</property>
+                        <child>
+                          <object class="GtkInfoBar" id="info_bar">
+                            <property name="revealed">False</property>
+                            <child>
+                              <object class="GtkLabel" id="info_label">
+                                <property name="margin-start">3</property>
+                                <property name="margin-bottom">3</property>
+                                <property name="margin-top">3</property>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkBox">
+                            <property name="orientation">GTK_ORIENTATION_VERTICAL</property>
+                            <property name="halign">GTK_ALIGN_CENTER</property>
+                            <property name="valign">GTK_ALIGN_CENTER</property>
+                            <property name="vexpand">True</property>
+                            <property name="spacing">16</property>
+                            <child>
+                              <object class="GtkLabel" id="entry_label">
+                                <property name="can-focus">False</property>
+                                <binding name="label">
+                                  <lookup name="label" type="GtkLabel">
+                                    <lookup name="selected-item">selection</lookup>
+                                  </lookup>
+                                </binding>
+                                <style>
+                                  <class name="title-header"/>
+                                </style>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkPasswordEntry" id="password">
+                                <property name="show-peek-icon">True</property>
+                              </object>
+                            </child>
                           </object>
                         </child>
                       </object>
                     </child>
                   </object>
                 </child>
+              </object>
+              <!-- end main box -->
+            </property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkStackPage">
+            <property name="name">add_password</property>
+            <property name="child">
+              <object class="GtkGrid">
                 <child>
-                  <object class="GtkScrolledWindow">
-                    <property name="vexpand">True</property>
-                    <property name="width-request">240</property>
-                    <child>
-                      <object class="GtkListView" id="entry_list">
-                        <property name="name">entry-list</property>
-                        <!-- List model -->
-                        <property name="model">
-                          <object class="GtkSingleSelection" id="selection">
-                            <property name="model">
-                              <object class="GtkFilterListModel">
-                                <property name="model">
-                                  <object class="GListStore" id="store"></object>
-                                </property>
-                                <property name="filter">
-                                  <object class="GtkStringFilter">
-                                    <property name="expression">
-                                      <lookup name="label" type="GtkLabel"></lookup>
-                                    </property>
-                                    <property name="search" bind-source="search_entry" bind-property="text"/>
-                                  </object>
-                                </property>
-                              </object>
-                            </property>
-                          </object>
-                        </property>
-                        <!-- List item factory -->
-                        <property name="factory">
-                          <object class="GtkBuilderListItemFactory">
-                            <property name="bytes"><![CDATA[
-                            <?xml version="1.0" encoding="UTF-8"?>
-                            <interface>
-                              <template class="GtkListItem">
-                                <property name="child">
-                                  <object class="GtkTreeExpander" id="expander">
-                                    <binding name="list-row">
-                                      <lookup name="item">GtkListItem</lookup>
-                                    </binding>
-                                    <property name="child">
-                                      <object class="GtkLabel">
-                                        <property name="xalign">0</property>
-                                        <property name="margin-start">9</property>
-                                        <property name="margin-end">9</property>
-                                        <property name="margin-bottom">9</property>
-                                        <property name="margin-top">9</property>
-                                        <binding name="label">
-                                          <lookup name="label" type="GtkLabel">
-                                            <lookup name="item">GtkListItem</lookup>
-                                          </lookup>
-                                        </binding>
-                                      </object>
-                                    </property>
-                                  </object>
-                                </property>
-                              </template>
-                            </interface>]]>
-                            </property>
-                          </object>
-                        </property>
-                      </object>
-                    </child>
+                  <object class="GtkLabel">
+                    <property name="label">Name</property>
                   </object>
+                </child>
+                <child>
+                  <object class="GtkEntry"></object>
+                </child>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="label">Password</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkEntry"></object>
                 </child>
               </object>
-            </child>
-            <!-- right pane -->
-            <child>
-              <object class="GtkBox">
-                <property name="orientation">GTK_ORIENTATION_VERTICAL</property>
-                <child>
-                  <object class="GtkInfoBar" id="info_bar">
-                    <property name="revealed">False</property>
-                    <child>
-                      <object class="GtkLabel" id="info_label">
-                        <property name="margin-start">3</property>
-                        <property name="margin-bottom">3</property>
-                        <property name="margin-top">3</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkBox">
-                    <property name="orientation">GTK_ORIENTATION_VERTICAL</property>
-                    <property name="halign">GTK_ALIGN_CENTER</property>
-                    <property name="valign">GTK_ALIGN_CENTER</property>
-                    <property name="vexpand">True</property>
-                    <property name="spacing">16</property>
-                    <child>
-                      <object class="GtkLabel" id="entry_label">
-                        <property name="can-focus">False</property>
-                        <binding name="label">
-                          <lookup name="label" type="GtkLabel">
-                            <lookup name="selected-item">selection</lookup>
-                          </lookup>
-                        </binding>
-                        <style>
-                          <class name="title-header"/>
-                        </style>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkPasswordEntry" id="password">
-                        <property name="show-peek-icon">True</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
-              </object>
-            </child>
+            </property>
           </object>
         </child>
       </object>

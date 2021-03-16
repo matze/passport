@@ -23,6 +23,8 @@ mod imp {
     pub struct ApplicationWindow {
         pub settings: gio::Settings,
         #[template_child]
+        pub stack: TemplateChild<gtk::Stack>,
+        #[template_child]
         pub search_bar: TemplateChild<gtk::SearchBar>,
         #[template_child]
         pub search_entry: TemplateChild<gtk::SearchEntry>,
@@ -48,6 +50,7 @@ mod imp {
 
         fn new() -> Self {
             Self {
+                stack: TemplateChild::default(),
                 settings: gio::Settings::new(APP_ID),
                 search_bar: TemplateChild::default(),
                 search_entry: TemplateChild::default(),
@@ -168,16 +171,8 @@ impl ApplicationWindow {
             window,
             "add",
             clone!(@weak window as win => move |_, _| {
-                let builder = gtk::Builder::from_resource("/net/bloerg/Passport/dialogs.ui");
-                let dialog: gtk::Dialog = builder.get_object("add_password_dialog").unwrap();
-                dialog.set_modal(true);
-                dialog.set_transient_for(Some(&win));
-
-                dialog.connect_response(move |dialog, response| {
-                    dialog.destroy();
-                });
-
-                dialog.show();
+                let stack = &imp::ApplicationWindow::from_instance(&win).stack;
+                stack.set_visible_child_name("add_password");
             })
         );
 
