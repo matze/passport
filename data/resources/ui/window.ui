@@ -156,6 +156,10 @@
                             <child>
                               <object class="GtkLabel" id="entry_label">
                                 <property name="can-focus">False</property>
+                                <property name="ellipsize">PANGO_ELLIPSIZE_MIDDLE</property>
+                                <property name="width-chars">24</property>
+                                <property name="max-width-chars">24</property>
+                                <property name="xalign">0</property>
                                 <binding name="label">
                                   <lookup name="label" type="GtkLabel">
                                     <lookup name="selected-item">selection</lookup>
