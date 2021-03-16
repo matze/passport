@@ -171,6 +171,13 @@
                                 <property name="show-peek-icon">True</property>
                               </object>
                             </child>
+                            <child>
+                              <object class="GtkRevealer" id="metadata_revealer">
+                                <child>
+                                  <object class="GtkTextView" id="metadata"></object>
+                                </child>
+                              </object>
+                            </child>
                           </object>
                         </child>
                       </object>

@@ -11,7 +11,8 @@ use log::warn;
 use std::thread;
 
 pub enum Message {
-    UpdatePasswordEntry(String),
+    ClearEntry,
+    UpdateEntry(String, String),
     HideInfoBar,
 }
 
@@ -35,6 +36,10 @@ mod imp {
         #[template_child]
         pub password: TemplateChild<gtk::PasswordEntry>,
         #[template_child]
+        pub metadata: TemplateChild<gtk::TextView>,
+        #[template_child]
+        pub metadata_revealer: TemplateChild<gtk::Revealer>,
+        #[template_child]
         pub info_bar: TemplateChild<gtk::InfoBar>,
         #[template_child]
         pub info_label: TemplateChild<gtk::Label>,
@@ -57,6 +62,8 @@ mod imp {
                 store: TemplateChild::default(),
                 selection: TemplateChild::default(),
                 password: TemplateChild::default(),
+                metadata: TemplateChild::default(),
+                metadata_revealer: TemplateChild::default(),
                 info_bar: TemplateChild::default(),
                 info_label: TemplateChild::default(),
                 entry_label: TemplateChild::default(),
@@ -134,9 +141,29 @@ impl ApplicationWindow {
         receiver.attach(None,
             clone!(@weak window as win => move |message| {
                 match message {
-                    Message::UpdatePasswordEntry(text) => {
+                    Message::ClearEntry => {
                         let password = &imp::ApplicationWindow::from_instance(&win).password;
-                        password.set_text(&text);
+                        password.set_text("");
+
+                        let revealer = &imp::ApplicationWindow::from_instance(&win).metadata_revealer;
+                        revealer.set_reveal_child(false);
+
+                        let metadata = &imp::ApplicationWindow::from_instance(&win).metadata;
+                        let buffer = metadata.get_buffer();
+                        buffer.set_text("");
+                    },
+                    Message::UpdateEntry(password_text, metadata_text) => {
+                        let password = &imp::ApplicationWindow::from_instance(&win).password;
+                        password.set_text(&password_text);
+
+                        let metadata = &imp::ApplicationWindow::from_instance(&win).metadata;
+                        let buffer = metadata.get_buffer();
+                        buffer.set_text(&metadata_text);
+
+                        if metadata_text.len() > 0 {
+                            let revealer = &imp::ApplicationWindow::from_instance(&win).metadata_revealer;
+                            revealer.set_reveal_child(true);
+                        }
                     },
                     Message::HideInfoBar => {
                         let info_bar = &imp::ApplicationWindow::from_instance(&win).info_bar;
@@ -158,10 +185,11 @@ impl ApplicationWindow {
                     let sender = sender.clone();
 
                     thread::spawn(move || {
-                        let _ = sender.send(Message::UpdatePasswordEntry(String::from("")));
+                        let _ = sender.send(Message::ClearEntry);
+
                         let storage = storage::Storage::new().unwrap();
                         let entry = storage.decrypt(&entry).unwrap();
-                        let _ = sender.send(Message::UpdatePasswordEntry(entry.password));
+                        let _ = sender.send(Message::UpdateEntry(entry.password, entry.metadata));
                     });
                 }
             }),
