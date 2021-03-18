@@ -45,6 +45,8 @@ mod imp {
         pub info_label: TemplateChild<gtk::Label>,
         #[template_child]
         pub entry_label: TemplateChild<gtk::Label>,
+        #[template_child]
+        pub add_password_cancel_button: TemplateChild<gtk::Button>,
     }
 
     #[glib::object_subclass]
@@ -67,6 +69,7 @@ mod imp {
                 info_bar: TemplateChild::default(),
                 info_label: TemplateChild::default(),
                 entry_label: TemplateChild::default(),
+                add_password_cancel_button: TemplateChild::default(),
             }
         }
 
@@ -193,6 +196,16 @@ impl ApplicationWindow {
                     });
                 }
             }),
+        );
+
+        let button = &imp::ApplicationWindow::from_instance(&window).add_password_cancel_button.clone();
+
+        button.connect_clicked(
+            clone!(@weak window as win => move |_| {
+                println!("clicked!");
+                let stack = &imp::ApplicationWindow::from_instance(&win).stack;
+                stack.set_visible_child_name("main_page");
+            })
         );
 
         action!(

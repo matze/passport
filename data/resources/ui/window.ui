@@ -276,7 +276,7 @@
                           </object>
                         </child>
                         <child>
-                          <object class="GtkButton">
+                          <object class="GtkButton" id="add_password_cancel_button">
                             <property name="label">Cancel</property>
                           </object>
                         </child>
