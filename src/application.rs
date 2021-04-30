@@ -8,7 +8,6 @@ use gtk::{gdk, gio, glib};
 use gtk_macros::action;
 use log::{debug, info};
 use once_cell::sync::OnceCell;
-use std::env;
 
 mod imp {
     use super::*;
@@ -121,7 +120,7 @@ impl Application {
     fn setup_css(&self) {
         let provider = gtk::CssProvider::new();
         provider.load_from_resource("/net/bloerg/Passport/style.css");
-        if let Some(display) = gdk::Display::get_default() {
+        if let Some(display) = gdk::Display::default() {
             gtk::StyleContext::add_provider_for_display(
                 &display,
                 &provider,
@@ -151,7 +150,6 @@ impl Application {
         info!("Version: {} ({})", config::VERSION, config::PROFILE);
         info!("Datadir: {}", config::PKGDATADIR);
 
-        let args: Vec<String> = env::args().collect();
-        ApplicationExtManual::run(self, &args);
+        ApplicationExtManual::run(self);
     }
 }

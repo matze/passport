@@ -88,12 +88,12 @@ mod imp {
             self.parent_constructed(obj);
 
             let builder = gtk::Builder::from_resource("/net/bloerg/Passport/shortcuts.ui");
-            let shortcuts = builder.get_object("shortcuts").unwrap();
+            let shortcuts = builder.object("shortcuts").unwrap();
             obj.set_help_overlay(Some(&shortcuts));
 
             // Devel Profile
             if PROFILE == "Devel" {
-                obj.get_style_context().add_class("devel");
+                obj.style_context().add_class("devel");
             }
 
             // load latest window state
@@ -142,7 +142,7 @@ impl ApplicationWindow {
 
         // Handle background requests
         receiver.attach(None,
-            clone!(@weak window as win => move |message| {
+            clone!(@strong window as win => move |message| {
                 match message {
                     Message::ClearEntry => {
                         let password = &imp::ApplicationWindow::from_instance(&win).password;
@@ -152,7 +152,7 @@ impl ApplicationWindow {
                         revealer.set_reveal_child(false);
 
                         let metadata = &imp::ApplicationWindow::from_instance(&win).metadata;
-                        let buffer = metadata.get_buffer();
+                        let buffer = metadata.buffer();
                         buffer.set_text("");
                     },
                     Message::UpdateEntry(password_text, metadata_text) => {
@@ -160,7 +160,7 @@ impl ApplicationWindow {
                         password.set_text(&password_text);
 
                         let metadata = &imp::ApplicationWindow::from_instance(&win).metadata;
-                        let buffer = metadata.get_buffer();
+                        let buffer = metadata.buffer();
                         buffer.set_text(&metadata_text);
 
                         if metadata_text.len() > 0 {
@@ -182,9 +182,9 @@ impl ApplicationWindow {
 
         selection.connect_selection_changed(
             clone!(@strong sender => move |selection, _, _| {
-                if let Some(item) = selection.get_object(selection.get_selected()) {
+                if let Some(item) = selection.selected_item() {
                     let label = item.downcast::<gtk::Label>().unwrap();
-                    let entry = label.get_text().clone();
+                    let entry = label.text().clone();
                     let sender = sender.clone();
 
                     thread::spawn(move || {
@@ -225,7 +225,7 @@ impl ApplicationWindow {
                 let search_entry = &imp::ApplicationWindow::from_instance(&win).search_entry;
 
                 // Must be easier to bind those ...
-                search_bar.set_search_mode(!search_bar.get_search_mode());
+                search_bar.set_search_mode(!search_bar.is_search_mode());
                 search_entry.grab_focus();
             })
         );
@@ -235,12 +235,12 @@ impl ApplicationWindow {
             "copy",
             clone!(@weak window as win => move |_, _| {
                 let password = &imp::ApplicationWindow::from_instance(&win).password;
-                let clipboard = password.get_clipboard();
-                clipboard.set_text(&password.get_text());
+                let clipboard = password.clipboard();
+                clipboard.set_text(&password.text());
 
                 let info_label = &imp::ApplicationWindow::from_instance(&win).info_label;
                 let entry_label = &imp::ApplicationWindow::from_instance(&win).entry_label;
-                info_label.set_markup(&format!("Copied <b>{}</b> to clipboard.", entry_label.get_text()));
+                info_label.set_markup(&format!("Copied <b>{}</b> to clipboard.", entry_label.text()));
 
                 let info_bar = &imp::ApplicationWindow::from_instance(&win).info_bar;
                 info_bar.set_revealed(true);
@@ -260,7 +260,7 @@ impl ApplicationWindow {
     pub fn save_window_size(&self) -> Result<(), glib::BoolError> {
         let settings = &imp::ApplicationWindow::from_instance(self).settings;
 
-        let (width, height) = self.get_default_size();
+        let (width, height) = self.default_size();
 
         settings.set_int("window-width", width)?;
         settings.set_int("window-height", height)?;
@@ -273,9 +273,9 @@ impl ApplicationWindow {
     fn load_window_size(&self) {
         let settings = &imp::ApplicationWindow::from_instance(self).settings;
 
-        let width = settings.get_int("window-width");
-        let height = settings.get_int("window-height");
-        let is_maximized = settings.get_boolean("is-maximized");
+        let width = settings.int("window-width");
+        let height = settings.int("window-height");
+        let is_maximized = settings.boolean("is-maximized");
 
         self.set_default_size(width, height);
 
