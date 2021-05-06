@@ -13,7 +13,7 @@ pub struct Entry {
 
 impl Storage {
     pub fn new() -> Result<Self> {
-        let home = dirs::home_dir().ok_or(anyhow!("Cannot retrieve home dir"))?;
+        let home = dirs::home_dir().ok_or_else(|| anyhow!("Cannot retrieve home dir"))?;
         Ok(Self {
             root: home.join(".password-store"),
         })
@@ -48,7 +48,7 @@ impl Storage {
         let output = Command::new("pass")
             .arg(entry)
             .output()
-            .with_context(|| format!("Could not call pass"))?;
+            .with_context(|| "Could not call pass")?;
 
         let stdout = String::from_utf8(output.stdout)?;
         let mut lines = stdout.lines();

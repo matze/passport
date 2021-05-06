@@ -163,7 +163,7 @@ impl ApplicationWindow {
                         let buffer = metadata.buffer();
                         buffer.set_text(&metadata_text);
 
-                        if metadata_text.len() > 0 {
+                        if !metadata_text.is_empty() {
                             let revealer = &imp::ApplicationWindow::from_instance(&win).metadata_revealer;
                             revealer.set_reveal_child(true);
                         }
@@ -184,7 +184,7 @@ impl ApplicationWindow {
             clone!(@strong sender => move |selection, _, _| {
                 if let Some(item) = selection.selected_item() {
                     let label = item.downcast::<gtk::Label>().unwrap();
-                    let entry = label.text().clone();
+                    let entry = label.text();
                     let sender = sender.clone();
 
                     thread::spawn(move || {
